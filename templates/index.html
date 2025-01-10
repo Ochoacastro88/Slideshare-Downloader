@@ -4,174 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Slideshare Downloader</title>
-    <link rel="icon" type="image/x-icon" href="../img/descargar-archivo.png">
+    <link rel="icon" type="image/x-icon" href="../img/logo.png">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.js"></script>
-    <style>
-        body { 
-            background: #1a1f2e; 
-            font-family: 'The Mix Mono', monospace;
-        }
-        .label-text {
-            color: #ffffff;
-            font-size: 20px;
-            opacity: 0.9;
-            
-        }
-        .input-url {
-            width: 70%;
-            padding: 10px;
-            margin: 10px 0;
-            border: none;
-            border-bottom: 2px solid #ccc;
-            background: transparent;
-            font-size: 1.5em;
-            color: white;
-                         
-        }
-        input[type=text]:focus {
-            background-color: #f4511e ;
-        }
-        .btn{
-            display: inline-block;
-            border-radius: 4px;
-            background-color: #f4511e;
-            color: #FFFFFF;
-            text-align: center;
-            font-size: 28px;
-            transition: all 0.5s;
-            cursor: pointer;
-            width: 20%;
-            border: 3px;
-            padding: 16px 15px;
-            text-decoration: none;
-            margin: 4px 2px;
-           
-
-        }
-
-        .btn:hover {
-            background: yellowgreen;
-        }
-        .select-control {
-            background: #f4511e ;
-            border: 1px solid #2a2f3a;
-            color: white;
-            padding: 8px 8px;
-            border-radius: 4px;
-            min-width: 80px;
-            font-size: 20px;
-            text-align: center;
-        }
-        .download-btn {
-            background: #2563eb;
-            color: white;
-            padding: 8px 20px;
-            border-radius: 4px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 14px;
-            transition: all 0.3s;
-        }
-        .download-btn:hover {
-            background: #1d4ed8;
-        }
-        .image-container {
-            border: 1px solid #2a2f3a;
-            border-radius: 8px;
-            overflow: hidden;
-            background: #121620;
-            position: relative;
-            aspect-ratio: 16/9;
-            width: 100%;
-        }
-        .checkbox-custom {
-            position: absolute;
-            top: 8px;
-            left: 8px;
-            width: 20px;
-            height: 20px;
-            opacity: 0.8;
-            cursor: pointer;
-            z-index: 10;
-        }
-        .control-panel {
-            background: #121620;
-            border: 1px solid #2a2f3a;
-            border-radius: 8px;
-            padding: 16px;
-        }
-        h1 {
-            color: white;
-            text-align: center;
-            margin-bottom: 20px;
-            font-size:300%;
-        }
-        #imageGrid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 1rem;
-            padding: 1rem;
-        }
-        .image-container img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            object-position: center;
-        }
-        .selected {
-            border: 2px solid #f4511e;
-        }
-
-        #selectAllBtn, .download-btn{
-            display: inline-block;
-            border-radius: 4px;
-            background-color: #1d4ed8 ;
-            color: #FFFFFF;
-            text-align: center;
-            font-size: 15px;
-            transition: all 0.5s;
-            cursor: pointer;
-            width: 20%;
-            border: 3px;
-            padding: 10px 15px;
-            text-decoration: none;
-            margin: 4px 2px;
-        }
-
-        img {
-            display: block;
-            margin: auto;
-            width: 10%;
-            }
-
-            input[type=text] {
-            background-image: url('../img/lupa.png');
-            background-position: 10px 10px;
-            background-repeat: no-repeat;
-            padding-left: 40px;
-            background-size: 20px 20px;
-            }  
-            .input-url::placeholder {
-            color: white;
-            opacity: 0.8; /* Ajusta la opacidad si lo deseas */
-            }
-            .main-content {
-            margin-left: 400px;
-            display: flex;
-            flex-direction:row;
-            align-items: center;
-            width: calc(100% - 200px);
-            }
-
-            #center {
-            margin-left: 500px;
-            align-items: center;
-            
-            }
-
-            
-    </style>
+    <link rel="stylesheet" href="../static/css/styles.css"> 
 </head>
 <body class="p-4">
     <h1>Slideshare Downloader</h1> 
@@ -208,8 +43,7 @@
                     <line x1="12" y1="15" x2="12" y2="3"/>
                 </svg>
                 Descargar Archivo en PDF <br>Seleccionadas (<span id="selectedCount">0</span>)
-            </button>
-             
+            </button>             
         </div>
 
         <!-- Grid de imágenes -->
@@ -236,7 +70,7 @@
                 updateSelectedCount();
             } catch (error) {
                 console.error('Error:', error);
-                // Aquí puedes agregar un manejo de errores más amigable
+                
             }
         }
 
@@ -316,7 +150,7 @@
                 a.click();
             } catch (error) {
                 console.error('Error al crear el PDF:', error);
-                // Aquí puedes agregar un manejo de errores más amigable
+                
             }
         }
     </script>
