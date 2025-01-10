@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Slideshare Downloader</title>
+    <link rel="icon" type="image/x-icon" href="../img/descargar-archivo.png">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.js"></script>
+    <style>
+        body { 
+            background: #1a1f2e; 
+            font-family: 'The Mix Mono', monospace;
+        }
+        .label-text {
+            color: #ffffff;
+            font-size: 20px;
+            opacity: 0.9;
+            
+        }
+        .input-url {
+            width: 70%;
+            padding: 10px;
+            margin: 10px 0;
+            border: none;
+            border-bottom: 2px solid #ccc;
+            background: transparent;
+            font-size: 1.5em;
+            color: white;
+                         
+        }
+        input[type=text]:focus {
+            background-color: #f4511e ;
+        }
+        .btn{
+            display: inline-block;
+            border-radius: 4px;
+            background-color: #f4511e;
+            color: #FFFFFF;
+            text-align: center;
+            font-size: 28px;
+            transition: all 0.5s;
+            cursor: pointer;
+            width: 20%;
+            border: 3px;
+            padding: 16px 15px;
+            text-decoration: none;
+            margin: 4px 2px;
+           
+
+        }
+
+        .btn:hover {
+            background: yellowgreen;
+        }
+        .select-control {
+            background: #f4511e ;
+            border: 1px solid #2a2f3a;
+            color: white;
+            padding: 8px 8px;
+            border-radius: 4px;
+            min-width: 80px;
+            font-size: 20px;
+            text-align: center;
+        }
+        .download-btn {
+            background: #2563eb;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        .download-btn:hover {
+            background: #1d4ed8;
+        }
+        .image-container {
+            border: 1px solid #2a2f3a;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #121620;
+            position: relative;
+            aspect-ratio: 16/9;
+            width: 100%;
+        }
+        .checkbox-custom {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            width: 20px;
+            height: 20px;
+            opacity: 0.8;
+            cursor: pointer;
+            z-index: 10;
+        }
+        .control-panel {
+            background: #121620;
+            border: 1px solid #2a2f3a;
+            border-radius: 8px;
+            padding: 16px;
+        }
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size:300%;
+        }
+        #imageGrid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1rem;
+            padding: 1rem;
+        }
+        .image-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+        }
+        .selected {
+            border: 2px solid #f4511e;
+        }
+
+        #selectAllBtn, .download-btn{
+            display: inline-block;
+            border-radius: 4px;
+            background-color: #1d4ed8 ;
+            color: #FFFFFF;
+            text-align: center;
+            font-size: 15px;
+            transition: all 0.5s;
+            cursor: pointer;
+            width: 20%;
+            border: 3px;
+            padding: 10px 15px;
+            text-decoration: none;
+            margin: 4px 2px;
+        }
+
+        img {
+            display: block;
+            margin: auto;
+            width: 10%;
+            }
+
+            input[type=text] {
+            background-image: url('../img/lupa.png');
+            background-position: 10px 10px;
+            background-repeat: no-repeat;
+            padding-left: 40px;
+            background-size: 20px 20px;
+            }  
+            .input-url::placeholder {
+            color: white;
+            opacity: 0.8; /* Ajusta la opacidad si lo deseas */
+            }
+            .main-content {
+            margin-left: 400px;
+            display: flex;
+            flex-direction:row;
+            align-items: center;
+            width: calc(100% - 200px);
+            }
+
+            #center {
+            margin-left: 500px;
+            align-items: center;
+            
+            }
+
+            
+    </style>
+</head>
+<body class="p-4">
+    <h1>Slideshare Downloader</h1> 
+    <div>
+    <img src="../img/descargar-archivo.png" alt="logo" width="100" height="100">
+    </div>
+    <div class="max-w-6xl mx-auto">
+    <br>    
+        <!-- Barra superior -->
+         
+        <div class="flex gap-2 mb-6">          
+            <input type="text" id="urlInput" placeholder="Ingresa la URL" class="input-url">
+            <button onclick="searchImages()" class="btn" >Buscar</button>                       
+        </div>
+        <br>
+        <!-- Controles de descarga -->
+        <div class="control-panel flex items-center justify-between mb-6">
+            <div class="flex items-center gap-6">
+                <div class="main-content">
+                    <span class="label-text">Número de Hojas:</span>
+                    <select id="pageCount" class="select-control" disabled>
+                        <option value="0">0</option>
+                    </select>
+                    <button onclick="toggleSelectAll()" id="selectAllBtn" class="btn">
+                        Seleccionar Todo
+                    </button>   
+                </div>                   
+                <br>                
+            </div>                  
+            <button class="download-btn" onclick="createPDF()" id="center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="7 10 12 15 17 10"/>
+                    <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                Descargar Archivo en PDF <br>Seleccionadas (<span id="selectedCount">0</span>)
+            </button>
+             
+        </div>
+
+        <!-- Grid de imágenes -->
+        <div id="imageGrid"></div>
+    </div>
+
+    <script>
+        let selectedImages = new Set();
+        let allImages = [];
+        let allSelected = false;
+
+        async function searchImages() {
+            const url = document.getElementById('urlInput').value;
+            try {
+                const response = await fetch('/search', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({url})
+                });
+                allImages = await response.json();
+                displayImages(allImages);
+                updatePageCount(allImages.length);
+                selectedImages.clear();
+                updateSelectedCount();
+            } catch (error) {
+                console.error('Error:', error);
+                // Aquí puedes agregar un manejo de errores más amigable
+            }
+        }
+
+        function toggleSelectAll() {
+            allSelected = !allSelected;
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = allSelected;
+                const url = checkbox.getAttribute('data-url');
+                if (allSelected) {
+                    selectedImages.add(url);
+                    checkbox.closest('.image-container').classList.add('selected');
+                } else {
+                    selectedImages.delete(url);
+                    checkbox.closest('.image-container').classList.remove('selected');
+                }
+            });
+            document.getElementById('selectAllBtn').textContent = 
+                allSelected ? 'Deseleccionar Todo' : 'Seleccionar Todo';
+            updateSelectedCount();
+        }
+
+        function toggleImage(checkbox, url) {
+            const container = checkbox.closest('.image-container');
+            if (checkbox.checked) {
+                selectedImages.add(url);
+                container.classList.add('selected');
+            } else {
+                selectedImages.delete(url);
+                container.classList.remove('selected');
+                allSelected = false;
+                document.getElementById('selectAllBtn').textContent = 'Seleccionar Todo';
+            }
+            updateSelectedCount();
+        }
+
+        function updateSelectedCount() {
+            document.getElementById('selectedCount').textContent = selectedImages.size;
+        }
+
+        function updatePageCount(count) {
+            document.getElementById('pageCount').innerHTML = 
+                `<option value="${count}">${count}</option>`;
+        }
+
+        function displayImages(images) {
+            const grid = document.getElementById('imageGrid');
+            grid.innerHTML = '';
+            
+            images.forEach((image, index) => {
+                const div = document.createElement('div');
+                div.className = 'image-container';
+                div.innerHTML = `
+                    <input type="checkbox" class="checkbox-custom" data-url="${image.url}" 
+                           onchange="toggleImage(this, '${image.url}')">
+                    <img src="${image.thumbnail}" alt="${image.title}">
+                `;
+                grid.appendChild(div);
+            });
+        }
+
+        async function createPDF() {
+            if (selectedImages.size === 0) return;
+            
+            try {
+                const response = await fetch('/create-pdf', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({images: Array.from(selectedImages)})
+                });
+                
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'imagenes_seleccionadas.pdf';
+                a.click();
+            } catch (error) {
+                console.error('Error al crear el PDF:', error);
+                // Aquí puedes agregar un manejo de errores más amigable
+            }
+        }
+    </script>
+</body>
+</html>
