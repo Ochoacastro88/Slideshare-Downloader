@@ -3,75 +3,146 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Slideshare Downloader</title>
-    <link rel="icon" type="image/x-icon" href="../img/logo.png">
+    <link rel="stylesheet" href="../static/css/styles.css">
+    <title>SlideShare Downloader</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.js"></script>
-    <link rel="stylesheet" href="../static/css/styles.css"> 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.js"></script>
 </head>
-<body class="p-4">
-    <h1>Slideshare Downloader</h1> 
-    <div>
-    <img src="../img/descargar-archivo.png" alt="logo" width="100" height="100">
-    </div>
-    <div class="max-w-6xl mx-auto">
-    <br>    
-        <!-- Barra superior -->
-         
-        <div class="flex gap-2 mb-6">          
-            <input type="text" id="urlInput" placeholder="Ingresa la URL" class="input-url">
-            <button onclick="searchImages()" class="btn" >Buscar</button>                       
-        </div>
-        <br>
-        <!-- Controles de descarga -->
-        <div class="control-panel flex items-center justify-between mb-6">
-            <div class="flex items-center gap-6">
-                <div class="main-content">
-                    <span class="label-text">Número de Hojas:</span>
-                    <select id="pageCount" class="select-control" disabled>
-                        <option value="0">0</option>
-                    </select>
-                    <button onclick="toggleSelectAll()" id="selectAllBtn" class="btn">
-                        Seleccionar Todo
-                    </button>   
-                </div>                   
-                <br>                
-            </div>                  
-            <button class="download-btn" onclick="createPDF()" id="center">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                    <polyline points="7 10 12 15 17 10"/>
-                    <line x1="12" y1="15" x2="12" y2="3"/>
-                </svg>
-                Descargar Archivo en PDF <br>Seleccionadas (<span id="selectedCount">0</span>)
-            </button>             
+<body>
+    <div class="container">
+        <h1 class="text-4xl font-bold text-center mb-8">SlideShare Downloader</h1>
+
+        <div id="error-message"></div>
+
+        <div class="search-bar">
+            <input type="text" id="urlInput" placeholder="Ingresa la URL de SlideShare" class="input-url">
+            <button onclick="searchImages()" class="btn-primary">Buscar</button>
         </div>
 
-        <!-- Grid de imágenes -->
-        <div id="imageGrid"></div>
+        <div class="control-panel">
+            <div class="flex justify-between items-center">
+                <span>Total de Hojas: <span id="pageCount">0</span></span>
+                <button onclick="createPDF()" class="btn-primary" id="downloadBtn">
+                    Descargar PDF (<span id="selectedCount">0</span>)
+                </button>
+            </div>
+
+            <div class="range-selector">
+                <span>Seleccionar rango:</span>
+                <input type="number" id="rangeStart" min="1" value="1" class="range-input" placeholder="Desde">
+                <span>hasta</span>
+                <input type="number" id="rangeEnd" min="1" value="1" class="range-input" placeholder="Hasta">
+                <button onclick="selectRange()" class="btn-primary">Aplicar Rango</button>
+                <button onclick="toggleSelectAll()" id="selectAllBtn" class="btn-primary">
+                    Seleccionar Todo
+                </button>
+            </div>
+        </div>
+
+        <div id="imageGrid" class="image-grid"></div>
     </div>
+
+    <div id="loading" class="loading">Cargando...</div>
 
     <script>
         let selectedImages = new Set();
         let allImages = [];
         let allSelected = false;
+        const socket = io();
+
+        socket.on('status', function(data) {
+            document.getElementById('loading').textContent = data.message;
+        });
+
+        function showLoading(show) {
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
+        }
+
+        function showError(message) {
+            const errorElement = document.getElementById('error-message');
+            if (message) {
+                errorElement.textContent = message;
+                errorElement.style.display = 'block';
+            } else {
+                errorElement.style.display = 'none';
+            }
+        }
 
         async function searchImages() {
-            const url = document.getElementById('urlInput').value;
+            const url = document.getElementById('urlInput').value.trim();
+            if (!url) {
+                showError('Por favor ingresa una URL de SlideShare');
+                return;
+            }
+
+            showError('');
+            showLoading(true);
+
             try {
                 const response = await fetch('/search', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({url})
                 });
+
+                if (!response.ok) {
+                    throw new Error('Error al buscar las imágenes');
+                }
+
                 allImages = await response.json();
+                if (allImages.length === 0) {
+                    showError('No se encontraron Hojas en esta presentación');
+                    return;
+                }
+
                 displayImages(allImages);
-                updatePageCount(allImages.length);
+                document.getElementById('pageCount').textContent = allImages.length;
+                document.getElementById('rangeEnd').value = allImages.length;
+                document.getElementById('rangeEnd').max = allImages.length;
+                document.getElementById('rangeStart').max = allImages.length;
                 selectedImages.clear();
                 updateSelectedCount();
             } catch (error) {
-                console.error('Error:', error);
-                
+                showError('Error al procesar la URL. Asegúrate de que sea una URL válida de SlideShare');
+            } finally {
+                showLoading(false);
             }
+        }
+
+        function selectRange() {
+            const start = parseInt(document.getElementById('rangeStart').value);
+            const end = parseInt(document.getElementById('rangeEnd').value);
+
+            if (start > end) {
+                showError('El número inicial debe ser menor que el final');
+                return;
+            }
+
+            if (start < 1 || end > allImages.length) {
+                showError('Rango fuera de los límites');
+                return;
+            }
+
+            // Deseleccionar todo primero
+            selectedImages.clear();
+            document.querySelectorAll('.image-container').forEach(container => {
+                container.classList.remove('selected');
+                container.querySelector('input[type="checkbox"]').checked = false;
+            });
+
+            // Seleccionar el rango especificado
+            for (let i = start - 1; i < end; i++) {
+                const url = allImages[i].url;
+                selectedImages.add(url);
+                const container = document.querySelector(`[data-index="${i}"]`);
+                if (container) {
+                    container.classList.add('selected');
+                    container.querySelector('input[type="checkbox"]').checked = true;
+                }
+            }
+
+            updateSelectedCount();
+            showError('');
         }
 
         function toggleSelectAll() {
@@ -88,13 +159,16 @@
                     checkbox.closest('.image-container').classList.remove('selected');
                 }
             });
-            document.getElementById('selectAllBtn').textContent = 
+            document.getElementById('selectAllBtn').textContent =
                 allSelected ? 'Deseleccionar Todo' : 'Seleccionar Todo';
             updateSelectedCount();
         }
 
-        function toggleImage(checkbox, url) {
-            const container = checkbox.closest('.image-container');
+        function toggleImage(element, url) {
+            const container = element.closest('.image-container');
+            const checkbox = container.querySelector('input[type="checkbox"]');
+            checkbox.checked = !checkbox.checked;
+
             if (checkbox.checked) {
                 selectedImages.add(url);
                 container.classList.add('selected');
@@ -111,48 +185,72 @@
             document.getElementById('selectedCount').textContent = selectedImages.size;
         }
 
-        function updatePageCount(count) {
-            document.getElementById('pageCount').innerHTML = 
-                `<option value="${count}">${count}</option>`;
-        }
-
         function displayImages(images) {
             const grid = document.getElementById('imageGrid');
             grid.innerHTML = '';
-            
+
             images.forEach((image, index) => {
                 const div = document.createElement('div');
                 div.className = 'image-container';
+                div.setAttribute('data-index', index);
+                div.onclick = (e) => {
+                    if (e.target.type !== 'checkbox') {
+                        toggleImage(div, image.url);
+                    }
+                };
                 div.innerHTML = `
-                    <input type="checkbox" class="checkbox-custom" data-url="${image.url}" 
-                           onchange="toggleImage(this, '${image.url}')">
-                    <img src="${image.thumbnail}" alt="${image.title}">
+                    <input type="checkbox"
+                           class="checkbox-custom"
+                           data-url="${image.url}"
+                           onclick="event.stopPropagation()">
+                    <img src="${image.thumbnail}"
+                         alt="Hoja ${index + 1}"
+                         loading="lazy">
+                    <div class="slide-number">Hoja ${index + 1}</div>
                 `;
                 grid.appendChild(div);
             });
         }
 
         async function createPDF() {
-            if (selectedImages.size === 0) return;
-            
+            if (selectedImages.size === 0) {
+                showError('Por favor selecciona al menos una Hoja para descargar');
+                return;
+            }
+
+            showLoading(true);
+            showError('');
+
             try {
                 const response = await fetch('/create-pdf', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({images: Array.from(selectedImages)})
                 });
-                
+
+                if (!response.ok) {
+                    throw new Error('Error al crear el PDF');
+                }
+
                 const blob = await response.blob();
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = 'imagenes_seleccionadas.pdf';
+                a.download = 'presentacion_slideshare.pdf';
                 a.click();
             } catch (error) {
-                console.error('Error al crear el PDF:', error);
-                
+                showError('Error al generar el PDF. Por favor intenta nuevamente');
+            } finally {
+                showLoading(false);
             }
         }
+
+        // Event Listeners
+        document.getElementById('urlInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchImages();
+            }
+        });
     </script>
 </body>
 </html>
